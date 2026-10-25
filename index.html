@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homework - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+
+<header>
+  <h1>Penetration scores of n systems and m attackers</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Law of Large Numbers and Central Limit Theorem for sums of i.i.d. penetration scores, with a Bernoulli and a Rademacher model. Change the parameters, press <b>Run simulation</b> and every figure and table is recomputed in your browser.</p>
+  <nav class="toc">
+    <a href="#s1">1 Model</a><a href="#s2">2 Trajectories</a><a href="#s3">3 Distributions</a><a href="#s4">4 Law of Large Numbers</a><a href="#s5">5 Variances</a><a href="#s6">6 Central Limit Theorem</a><a href="#s7">7 Interpretation</a>
+  </nav>
+  <a class="dl" href="penetration-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<!-- ============ 1. MODEL ============ -->
+<section class="card" id="s1">
+  <h2><span class="num">1</span><span>Model and parameters</span></h2>
+  <p>There are <b>n systems</b> and <b>m attackers</b>. Attacker <i>j</i> probes the systems one after the other, and <i>X<sub>j,i</sub></i> is its penetration score on system <i>i</i>. The scores are i.i.d. across systems and independent across attackers. Two models are compared:</p>
+  <ul class="plain">
+    <li><b>Bernoulli:</b> X &isin; {0, 1} with P(X = 1) = p. The attacker either penetrates the system (1) or not (0), so p is the success probability and the drift is positive.</li>
+    <li><b>Rademacher:</b> X &isin; {&minus;1, +1} with probability 1/2 each. Progress (+1) and setback (&minus;1) are equally likely: a symmetric, zero-mean contest between attack and defence.</li>
+  </ul>
+  <p>For one attacker the three quantities studied are the <b>total score</b> S<sub>n</sub> = X<sub>1</sub> + &hellip; + X<sub>n</sub>, the <b>average score</b> S<sub>n</sub>/n (success rate per system) and the <b>normalized total score</b> S<sub>n</sub>/&radic;n. The m attackers give m independent copies of each, from which the distributions are estimated. All values of n are read off the <i>same</i> trajectories (the walk is simulated up to the largest n, and S is recorded at every n in the list), so the n-dependence is that of a real stochastic process.</p>
+
+  <div class="tblwrap"><table class="cmp">
+    <tr><th>Theory</th><th>Bernoulli (p)</th><th>Rademacher</th></tr>
+    <tr><td>E[X], Var[X]</td><td>p, &nbsp;p(1&minus;p)</td><td>0, &nbsp;1</td></tr>
+    <tr><td>E[S<sub>n</sub>], Var[S<sub>n</sub>]</td><td>np, &nbsp;np(1&minus;p)</td><td>0, &nbsp;n</td></tr>
+    <tr><td>E[S<sub>n</sub>/n], Var[S<sub>n</sub>/n]</td><td>p, &nbsp;p(1&minus;p)/n</td><td>0, &nbsp;1/n</td></tr>
+    <tr><td>E[S<sub>n</sub>/&radic;n], Var[S<sub>n</sub>/&radic;n]</td><td>p&radic;n, &nbsp;p(1&minus;p)</td><td>0, &nbsp;1</td></tr>
+    <tr><td>Law of Large Numbers</td><td>S<sub>n</sub>/n &rarr; p in probability</td><td>S<sub>n</sub>/n &rarr; 0 in probability</td></tr>
+    <tr><td>Central Limit Theorem</td><td>Z<sub>n</sub> = (S<sub>n</sub> &minus; np)/&radic;(np(1&minus;p)) &rarr; N(0,1)</td><td>S<sub>n</sub>/&radic;n = Z<sub>n</sub> &rarr; N(0,1)</td></tr>
+  </table></div>
+  <p class="note">In the Bernoulli model S<sub>n</sub>/&radic;n has mean p&radic;n, which grows: without centring it does not converge in distribution. The centred and standardized version Z<sub>n</sub> is therefore shown as a fourth quantity. In the Rademacher model the mean is 0 and Z<sub>n</sub> coincides with S<sub>n</sub>/&radic;n.</p>
+
+  <h3>Parameters</h3>
+  <div class="params">
+    <div><label for="pIn">Bernoulli success probability p</label><input type="number" id="pIn" value="0.3" min="0.001" max="0.999" step="0.01"></div>
+    <div><label for="mIn">Attackers m</label><input type="number" id="mIn" value="5000" min="100" max="20000" step="100"></div>
+    <div class="wide"><label for="nIn">Numbers of systems n (comma separated, up to 8 values, at most 100000)</label><input type="text" id="nIn" value="10, 50, 100, 500, 1000, 5000, 10000"></div>
+    <div><label for="epsIn">LLN tolerance &epsilon;</label><input type="number" id="epsIn" value="0.05" min="0.005" max="0.5" step="0.005"></div>
+    <div><label for="trIn">Trajectories drawn</label><input type="number" id="trIn" value="15" min="1" max="40"></div>
+    <div><label for="seedIn">Random seed</label><input type="number" id="seedIn" value="2026" min="0" step="1"></div>
+  </div>
+  <button id="runBtn" onclick="run()">Run simulation</button>
+  <div class="prog"><div id="prog"></div></div>
+  <div id="runMsg" class="note"></div>
+</section>
+
+<!-- ============ 2. TRAJECTORIES ============ -->
+<section class="card" id="s2">
+  <h2><span class="num">2</span><span>Sample trajectories</span></h2>
+  <p>Each coloured line is one attacker moving through the systems; the horizontal axis is the number of systems probed so far (linear for the totals, logarithmic for the normalized scores, so that the early steps are visible). White dashed: theoretical mean. Red dashed: mean &plusmn; 2 standard deviations. Green dotted (average score): the tolerance tube p &plusmn; &epsilon;.</p>
+  <div class="mhead"><span class="dotB"></span>Bernoulli model</div>
+  <div class="figs2"><figure><svg id="trB1" width="100%"></svg><figcaption>Total score S<sub>k</sub>: a linear drift (slope p) that hides a much smaller spread.</figcaption></figure>
+  <figure><svg id="trB4" width="100%"></svg><figcaption>Same trajectories with the drift removed (S<sub>k</sub> &minus; kp, not one of the three required quantities): a fan whose width grows like &radic;k.</figcaption></figure>
+  <figure><svg id="trB2" width="100%"></svg><figcaption>Average score S<sub>k</sub>/k: the lines squeeze towards p, as the Law of Large Numbers predicts.</figcaption></figure>
+  <figure><svg id="trB3" width="100%"></svg><figcaption>Normalized score S<sub>k</sub>/&radic;k: spread of constant size around a centre p&radic;k that moves away.</figcaption></figure></div>
+  <div class="mhead"><span class="dotR"></span>Rademacher model</div>
+  <div class="figs2"><figure><svg id="trR1" width="100%"></svg><figcaption>Total score S<sub>k</sub>: a symmetric random walk, with no drift and spread &radic;k.</figcaption></figure>
+  <figure><svg id="trR2" width="100%"></svg><figcaption>Average score S<sub>k</sub>/k: it shrinks to 0, at the slow rate 1/&radic;k.</figcaption></figure>
+  <figure><svg id="trR3" width="100%"></svg><figcaption>Normalized score S<sub>k</sub>/&radic;k: it stays in a band of fixed width (about &plusmn;2) for all k.</figcaption></figure></div>
+</section>
+
+<!-- ============ 3. DISTRIBUTIONS ============ -->
+<section class="card" id="s3">
+  <h2><span class="num">3</span><span>Distributions of the three quantities</span></h2>
+  <p>Histograms over the m attackers, for the number of systems selected below. The curve is the normal density with the theoretical mean and variance of each quantity. Bars are one lattice step wide for small n, and group several adjacent values for large n.</p>
+  <div class="params"><div><label for="nSel">Number of systems n</label><select id="nSel" onchange="renderHist()"></select></div></div>
+  <div class="mhead"><span class="dotB"></span>Bernoulli model</div>
+  <div class="figs2" id="histB"></div>
+  <div class="mhead"><span class="dotR"></span>Rademacher model</div>
+  <div class="figs2" id="histR"></div>
+  <div class="tblwrap"><table class="res" id="histTab"></table></div>
+  <p class="note">Observe how the same n gives three very different pictures. S<sub>n</sub> is wide and keeps widening, S<sub>n</sub>/n is narrow and concentrates, S<sub>n</sub>/&radic;n has a fixed width. In the Bernoulli model the distribution of S<sub>n</sub>/&radic;n is a bell of unchanged width whose centre p&radic;n runs away, while Z<sub>n</sub> stays fixed at N(0,1).</p>
+</section>
+
+<!-- ============ 4. LLN ============ -->
+<section class="card" id="s4">
+  <h2><span class="num">4</span><span>Law of Large Numbers: convergence in probability of S<sub>n</sub>/n</span></h2>
+  <p>Convergence in probability means that, for every &epsilon; &gt; 0, P(|S<sub>n</sub>/n &minus; &mu;| &gt; &epsilon;) &rarr; 0, where &mu; = p (Bernoulli) or 0 (Rademacher). The tables compare the frequency observed among the m attackers with the exact binomial value and with three theoretical estimates: the Chebyshev bound &sigma;&sup2;/(n&epsilon;&sup2;), the Hoeffding bound 2e<sup>&minus;2n&epsilon;&sup2;</sup> (Bernoulli) or 2e<sup>&minus;n&epsilon;&sup2;/2</sup> (Rademacher), and the normal approximation from the CLT.</p>
+  <div class="figs2"><figure><svg id="llnB" width="100%"></svg><figcaption>Bernoulli: P(|S<sub>n</sub>/n &minus; p| &gt; &epsilon;) against n (log-log).</figcaption></figure>
+  <figure><svg id="llnR" width="100%"></svg><figcaption>Rademacher: P(|S<sub>n</sub>/n| &gt; &epsilon;) against n (log-log).</figcaption></figure></div>
+  <div class="tblwrap"><table class="res" id="llnTab"></table></div>
+  <p class="note">An observed frequency of 0 only means that no attacker out of m was outside the tube, so the true probability is below about 1/m; on the charts it is drawn on the bottom edge. The Chebyshev bound is valid but very loose (it only decays like 1/n), Hoeffding is exponentially small, and the exact value is matched very closely by the simulation and by the normal approximation once n is moderately large. The convergence is also slower when &sigma; is larger: compare the two models at the same n.</p>
+</section>
+
+<!-- ============ 5. VARIANCES ============ -->
+<section class="card" id="s5">
+  <h2><span class="num">5</span><span>Variance under the different normalizations</span></h2>
+  <p>Dividing by 1, by n or by &radic;n has a precise effect on the spread: Var[S<sub>n</sub>] = n&sigma;&sup2; grows, Var[S<sub>n</sub>/n] = &sigma;&sup2;/n vanishes, and Var[S<sub>n</sub>/&radic;n] = &sigma;&sup2; is constant. Only the last normalization gives a non-degenerate limit.</p>
+  <div class="figs2"><figure><svg id="varB" width="100%"></svg><figcaption>Bernoulli: sample variances (markers) and theory (dashed), log-log.</figcaption></figure>
+  <figure><svg id="varR" width="100%"></svg><figcaption>Rademacher: sample variances (markers) and theory (dashed), log-log.</figcaption></figure></div>
+  <div class="tblwrap"><table class="res" id="varTab"></table></div>
+  <p class="note">The sample variance is computed over the m attackers with the unbiased estimator; its relative error is about &radic;(2/m), so ratios close to 1 within a few percent are what is expected. On the log-log chart the three theoretical lines have slopes +1, &minus;1 and 0.</p>
+</section>
+
+<!-- ============ 6. CLT ============ -->
+<section class="card" id="s6">
+  <h2><span class="num">6</span><span>Central Limit Theorem: convergence in distribution to N(0,1)</span></h2>
+  <p>The histograms show the standardized score Z<sub>n</sub> for every n in the list, with the standard normal density. For the Rademacher model this is exactly S<sub>n</sub>/&radic;n. The Kolmogorov&ndash;Smirnov distance D<sub>n</sub> = sup<sub>x</sub> |F<sub>n</sub>(x) &minus; &Phi;(x)| quantifies the gap between the empirical distribution and N(0,1).</p>
+  <div class="mhead"><span class="dotB"></span>Bernoulli model, Z<sub>n</sub> = (S<sub>n</sub> &minus; np)/&radic;(np(1&minus;p))</div>
+  <div class="figs3" id="galB"></div>
+  <div class="mhead"><span class="dotR"></span>Rademacher model, S<sub>n</sub>/&radic;n</div>
+  <div class="figs3" id="galR"></div>
+  <div class="figs2"><figure><svg id="ksFig" width="100%"></svg><figcaption>Kolmogorov&ndash;Smirnov distance to N(0,1) against n (log-log), with the Berry&ndash;Esseen bound (dashed) and the sampling-noise level 1.36/&radic;m (dotted).</figcaption></figure></div>
+  <div class="tblwrap"><table class="res" id="cltTab"></table></div>
+  <p class="note">Two effects limit what can be seen. For small n the distribution of S<sub>n</sub> lives on a lattice, so its distance from a continuous law is at least half the largest jump, of order 1/&radic;n: this is the same order as the Berry&ndash;Esseen bound C&rho;/(&sigma;&sup3;&radic;n) with C = 0.4748, and the measured distance decreases at the same 1/&radic;n rate until it reaches the noise floor. For large n the true distance falls below the sampling noise 1.36/&radic;m of an empirical distribution built from m attackers: at that point D<sub>n</sub> can no longer be distinguished from 0 and stops decreasing, which says something about m rather than about n. Skewness and excess kurtosis (columns on the right) approach 0 at rates 1/&radic;n and 1/n for the Bernoulli model; in the Rademacher model the skewness is 0 by symmetry and only the kurtosis, &minus;2/n, is non-trivial.</p>
+</section>
+
+<!-- ============ 7. INTERPRETATION ============ -->
+<section class="card" id="s7">
+  <h2><span class="num">7</span><span>Interpretation: system size and number of attackers</span></h2>
+  <div id="findings" class="findings"></div>
+  <h3>The role of n, the number of systems</h3>
+  <ul class="plain">
+    <li><b>Absolute score.</b> An attacker facing n systems collects a total S<sub>n</sub> with mean n&mu; and standard deviation &sigma;&radic;n. In the Bernoulli model the score is dominated by the drift: for example, with p = 0.3 and n = 10,000 about 3,000 systems fall and the uncertainty (about 46 systems) is small in comparison. In the Rademacher model there is no drift: the attacker is as likely to be ahead as behind, and the typical distance from 0 grows like &radic;n.</li>
+    <li><b>Relative score.</b> The fraction of compromised systems S<sub>n</sub>/n concentrates around p (LLN), with fluctuations of order &sigma;/&radic;n. A larger infrastructure therefore makes the outcome more predictable: the defender can plan on the success rate p, and the probability of a result far from it decays exponentially (Hoeffding). In the zero-mean model the net score per system tends to 0, but only at the slow rate 1/&radic;n.</li>
+    <li><b>Shape of the fluctuations.</b> The CLT says that, on the &radic;n scale, the fluctuations are Gaussian whatever the details of the score. Tail probabilities such as &ldquo;the attacker gets more than x systems beyond the average&rdquo; can then be estimated with &Phi; using only the mean and variance. For small n or p close to 0 or 1 the approximation is poor (the Bernoulli law is skewed, and with np small it is closer to Poisson), as the skewness column shows.</li>
+  </ul>
+  <h3>The role of m, the number of attackers</h3>
+  <ul class="plain">
+    <li><b>m does not change the law of one attacker.</b> The distribution of S<sub>n</sub> for each attacker depends only on n and on the model. What m changes is how well the distribution is <i>estimated</i>: the error of an empirical mean is &sigma;/&radic;m, the distance of an empirical cdf from the true one is about 1/&radic;m, and rare events (probability below 1/m) are simply not observed.</li>
+    <li><b>Pooling the attackers.</b> If the m attackers act on the same n systems, the pooled score T = &sum;<sub>j</sub> S<sub>n</sub><sup>(j)</sup> is a sum of mn i.i.d. terms: mean mn&mu;, standard deviation &sigma;&radic;(mn), so the total grows linearly in m but the relative spread falls like 1/&radic;(mn). More attackers make the aggregate more predictable, in the same way as more systems. This holds as long as the attackers are independent: coordinated attackers, shared vulnerabilities or systems that are not equivalent break the i.i.d. assumption and the &radic; gain.</li>
+    <li><b>Choosing m in a simulation.</b> To see a probability of order q, m must be well above 1/q, and to see the convergence in distribution the sampling error 1.36/&radic;m must be smaller than the distance one wants to measure. The table below shows these effects for the selected n.</li>
+  </ul>
+  <div class="params"><div><label for="nSel2">Number of systems n for the table</label><select id="nSel2" onchange="renderEffectM()"></select></div></div>
+  <div class="tblwrap"><table class="res" id="mTab"></table></div>
+  <h3>Limits of the model</h3>
+  <p>Independent and identically distributed scores are a strong assumption. Real systems differ in strength and share software, so the successes are positively correlated; real attackers learn from earlier attempts, so the probability of success changes along the way. Correlation increases the variance of S<sub>n</sub> above n&sigma;&sup2; and can destroy the &radic;n scaling and the Gaussian limit, so the results above should be read as the reference behaviour of the independent case.</p>
+</section>
+
+</div>
+<script src="js/sim.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
